@@ -160,7 +160,16 @@ Si besoin de regénérer l'ensemble des scènes ou le binaire Windows depuis Uni
 ```
 Assets/
 ├── Editor/
+│   ├── GoldRushPrefabGenerator.cs        # Génération automatique des Prefabs modulaires
 │   └── GoldRushProjectMasterBuilder.cs   # Script d'automatisation des scènes & du Build
+├── Prefabs/
+│   ├── Characters/                       # Prefabs Player et MenuPlayer
+│   ├── Collectibles/                     # Prefabs Pièces (GoldCoin & MenuSpinningCoin)
+│   ├── Enemies/                          # Prefabs Slimes (Vert, Violet, Feu) et Chauve-souris
+│   ├── Environment/                      # Prefabs Plateformes (Herbe, Cristal, Bois, Nuages)
+│   ├── Exits/                            # Prefabs Sorties (Drapeau, Portail, Arche Royale)
+│   ├── Hazards/                          # Prefabs Pièges de Piques
+│   └── Managers/                         # Prefabs Gestionnaires (GameManager & SoundManager)
 ├── Scenes/
 │   ├── MainMenu.unity                     # Menu principal (Figma style)
 │   ├── LevelSelect.unity                  # Sélection des 3 mondes

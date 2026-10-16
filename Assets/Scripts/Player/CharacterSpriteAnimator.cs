@@ -22,12 +22,18 @@ public class CharacterSpriteAnimator : MonoBehaviour
     [Min(0f)] public float breathingAmount = 0.022f;
     [Min(0.05f)] public float hurtDuration = 0.42f;
 
+    [Header("Taille du joueur")]
+    [Tooltip("Multiplicateur de taille du sprite (1.20 = 20% plus grand, 'juste un peu')")]
+    [Range(0.5f, 2.5f)] public float scaleMultiplier = 1.20f;
+
     private SpriteRenderer sr;
     private PlayerController25D playerCtrl;
     private float runTimer;
     private float stateTimer;
     private float hurtTimer;
     private bool useRun1 = true;
+    private Vector3 initialScale;
+    private Vector3 initialPosition;
     private Vector3 baseScale;
     private Vector3 basePosition;
     private Quaternion baseRotation;
@@ -37,10 +43,35 @@ public class CharacterSpriteAnimator : MonoBehaviour
     {
         sr = GetComponent<SpriteRenderer>();
         playerCtrl = GetComponentInParent<PlayerController25D>();
-        baseScale = transform.localScale;
-        basePosition = transform.localPosition;
+        initialScale = transform.localScale;
+        initialPosition = transform.localPosition;
+        ApplyScale();
         baseRotation = transform.localRotation;
         if (sr != null) baseColor = sr.color;
+    }
+
+    private void ApplyScale()
+    {
+        baseScale = initialScale * scaleMultiplier;
+        if (playerCtrl != null)
+        {
+            float feetOffset = (baseScale.y - initialScale.y) * 1.18f;
+            basePosition = initialPosition + new Vector3(0f, feetOffset, 0f);
+        }
+        else
+        {
+            basePosition = initialPosition;
+            transform.localScale = baseScale;
+        }
+    }
+
+    private void OnValidate()
+    {
+        if (scaleMultiplier <= 0f) scaleMultiplier = 1f;
+        if (initialScale != Vector3.zero)
+        {
+            ApplyScale();
+        }
     }
 
     private void Start()
@@ -56,6 +87,8 @@ public class CharacterSpriteAnimator : MonoBehaviour
     private void Update()
     {
         if (sr == null || playerCtrl == null) return;
+
+        ApplyScale();
 
         float dt = Time.deltaTime;
         Vector3 move = playerCtrl.GetLastMoveDirection();

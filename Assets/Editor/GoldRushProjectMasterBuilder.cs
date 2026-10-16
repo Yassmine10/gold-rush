@@ -12,9 +12,10 @@ public static class GoldRushProjectMasterBuilder
     [MenuItem("Gold Rush/🚀 GÉNÉRER LE PROJET COMPLET (Tous les Niveaux & Menus 2D)", false, 0)]
     public static void GenerateFullGameProject()
     {
-        EditorUtility.DisplayProgressBar("Coin Collector Master Builder", "Configuration des sprites 2D...", 0.1f);
+        EditorUtility.DisplayProgressBar("Coin Collector Master Builder", "Création et configuration des Prefabs 2D...", 0.1f);
         CreateProjectFolders();
         ConfigureAllSpritesAs2D();
+        GoldRushPrefabGenerator.GenerateAllPrefabs();
 
         EditorUtility.DisplayProgressBar("Coin Collector Master Builder", "Génération du Menu Principal 2D...", 0.25f);
         BuildMainMenuScene();
@@ -42,6 +43,7 @@ public static class GoldRushProjectMasterBuilder
     {
         CreateProjectFolders();
         ConfigureAllSpritesAs2D();
+        GoldRushPrefabGenerator.GenerateAllPrefabs();
         BuildMainMenuScene();
         BuildLevelSelectScene();
         BuildLevel1GreenValleyScene();
@@ -51,6 +53,7 @@ public static class GoldRushProjectMasterBuilder
         Debug.Log("🎉 LE PROJET COIN COLLECTOR 2D A ÉTÉ GÉNÉRÉ AVEC SUCCÈS (BATCH) !");
     }
 
+    [MenuItem("Gold Rush/📦 7. Compiler le Build PC Windows (.exe)", false, 17)]
     public static void BuildWindowsPlayer()
     {
         string[] scenes = new string[]
@@ -378,18 +381,18 @@ public static class GoldRushProjectMasterBuilder
 
         // Joueur 2D
         GameObject playerObj = CreateCuteCharacter(new Vector3(0, 0.47f, 0));
-        CharacterController cc = playerObj.AddComponent<CharacterController>();
+        CharacterController cc = playerObj.GetComponent<CharacterController>() ?? playerObj.AddComponent<CharacterController>();
         cc.center = new Vector3(0, 0, 0);
         cc.height = 0.78f;
         cc.radius = 0.2f;
         cc.skinWidth = 0.02f;
         cc.stepOffset = 0.15f;
         cc.minMoveDistance = 0f;
-        PlayerController25D playerCtrl = playerObj.AddComponent<PlayerController25D>();
+        PlayerController25D playerCtrl = playerObj.GetComponent<PlayerController25D>() ?? playerObj.AddComponent<PlayerController25D>();
         playerCtrl.moveSpeed = 8f;
         playerCtrl.jumpForce = 13.5f;
         playerCtrl.is2DSprite = true;
-        PlayerHealth playerHealth = playerObj.AddComponent<PlayerHealth>();
+        PlayerHealth playerHealth = playerObj.GetComponent<PlayerHealth>() ?? playerObj.AddComponent<PlayerHealth>();
         playerHealth.respawnPoint = playerObj.transform.position;
 
         // Ennemis slimes verts
@@ -465,18 +468,18 @@ public static class GoldRushProjectMasterBuilder
 
         // Joueur 2D
         GameObject playerObj = CreateCuteCharacter(new Vector3(0, 0.47f, 0));
-        CharacterController cc = playerObj.AddComponent<CharacterController>();
+        CharacterController cc = playerObj.GetComponent<CharacterController>() ?? playerObj.AddComponent<CharacterController>();
         cc.center = new Vector3(0, 0, 0);
         cc.height = 0.78f;
         cc.radius = 0.2f;
         cc.skinWidth = 0.02f;
         cc.stepOffset = 0.15f;
         cc.minMoveDistance = 0f;
-        PlayerController25D playerCtrl = playerObj.AddComponent<PlayerController25D>();
+        PlayerController25D playerCtrl = playerObj.GetComponent<PlayerController25D>() ?? playerObj.AddComponent<PlayerController25D>();
         playerCtrl.moveSpeed = 8f;
         playerCtrl.jumpForce = 13.5f;
         playerCtrl.is2DSprite = true;
-        PlayerHealth playerHealth = playerObj.AddComponent<PlayerHealth>();
+        PlayerHealth playerHealth = playerObj.GetComponent<PlayerHealth>() ?? playerObj.AddComponent<PlayerHealth>();
         playerHealth.respawnPoint = playerObj.transform.position;
 
         // Ennemis de Grotte : Slime Violet et Chauves-souris
@@ -558,18 +561,18 @@ public static class GoldRushProjectMasterBuilder
 
         // Joueur 2D
         GameObject playerObj = CreateCuteCharacter(new Vector3(0, 0.97f, 0));
-        CharacterController cc = playerObj.AddComponent<CharacterController>();
+        CharacterController cc = playerObj.GetComponent<CharacterController>() ?? playerObj.AddComponent<CharacterController>();
         cc.center = new Vector3(0, 0, 0);
         cc.height = 0.78f;
         cc.radius = 0.2f;
         cc.skinWidth = 0.02f;
         cc.stepOffset = 0.15f;
         cc.minMoveDistance = 0f;
-        PlayerController25D playerCtrl = playerObj.AddComponent<PlayerController25D>();
+        PlayerController25D playerCtrl = playerObj.GetComponent<PlayerController25D>() ?? playerObj.AddComponent<PlayerController25D>();
         playerCtrl.moveSpeed = 8f;
         playerCtrl.jumpForce = 14f;
         playerCtrl.is2DSprite = true;
-        PlayerHealth playerHealth = playerObj.AddComponent<PlayerHealth>();
+        PlayerHealth playerHealth = playerObj.GetComponent<PlayerHealth>() ?? playerObj.AddComponent<PlayerHealth>();
         playerHealth.respawnPoint = playerObj.transform.position;
 
         // Ennemis Célestes : Slimes de feu et Chauves-souris
@@ -1022,6 +1025,15 @@ public static class GoldRushProjectMasterBuilder
 
     private static GameObject CreateCuteCharacter(Vector3 position, bool forMenu = false)
     {
+        string pPath = forMenu ? GoldRushPrefabGenerator.CHAR_DIR + "/MenuPlayerCharacter.prefab" : GoldRushPrefabGenerator.CHAR_DIR + "/Player.prefab";
+        GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(pPath);
+        if (prefab != null)
+        {
+            GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            instance.transform.position = position;
+            return instance;
+        }
+
         GameObject root = new GameObject(forMenu ? "MenuPlayerCharacter" : "Player");
         root.transform.position = position;
 
@@ -1046,6 +1058,7 @@ public static class GoldRushProjectMasterBuilder
         sr.sortingOrder = 10;
 
         CharacterSpriteAnimator anim = visual.AddComponent<CharacterSpriteAnimator>();
+        anim.scaleMultiplier = 1.20f;
         anim.idleSprite = idle;
         anim.run1Sprite = run1;
         anim.run2Sprite = run2;
@@ -1061,6 +1074,14 @@ public static class GoldRushProjectMasterBuilder
 
     private static void CreateCollectibleCoin(Transform parent, Vector3 position)
     {
+        GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(GoldRushPrefabGenerator.COIN_DIR + "/GoldCoin.prefab");
+        if (prefab != null)
+        {
+            GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
+            instance.transform.position = position;
+            return;
+        }
+
         GameObject coin = new GameObject("GoldCoin");
         coin.transform.SetParent(parent);
         coin.transform.position = position;
@@ -1092,6 +1113,16 @@ public static class GoldRushProjectMasterBuilder
 
     private static void CreateSpinningCoinVisual(Transform parent, Vector3 position, float speed)
     {
+        GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(GoldRushPrefabGenerator.COIN_DIR + "/MenuSpinningCoin.prefab");
+        if (prefab != null)
+        {
+            GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
+            instance.transform.position = position;
+            CoinSpriteAnimator prefAnim = instance.GetComponentInChildren<CoinSpriteAnimator>();
+            if (prefAnim != null) prefAnim.bobSpeed = speed * 0.02f;
+            return;
+        }
+
         GameObject coin = new GameObject("MenuSpinningCoin");
         coin.transform.SetParent(parent);
         coin.transform.position = position;
@@ -1117,6 +1148,26 @@ public static class GoldRushProjectMasterBuilder
 
     private static void CreateSimpleEnemy(Vector3 pos, float patrolDist, string enemyType = "slime_green", float moveSpeed = 2.4f)
     {
+        string pName = enemyType switch
+        {
+            "slime_purple" => "Enemy_Slime_Purple",
+            "slime_fire" => "Enemy_Slime_Fire",
+            _ => "Enemy_Slime_Green"
+        };
+        GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{GoldRushPrefabGenerator.ENEMY_DIR}/{pName}.prefab");
+        if (prefab != null)
+        {
+            GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            instance.transform.position = pos;
+            SimpleEnemy se = instance.GetComponent<SimpleEnemy>();
+            if (se != null)
+            {
+                se.patrolDistance = patrolDist;
+                se.moveSpeed = moveSpeed;
+            }
+            return;
+        }
+
         GameObject enemy = new GameObject("Enemy_" + enemyType);
         enemy.transform.position = pos;
 
@@ -1146,14 +1197,28 @@ public static class GoldRushProjectMasterBuilder
         col.size = new Vector3(1.2f, 0.85f, 1.5f);
         col.center = new Vector3(0, 0, 0);
 
-        SimpleEnemy se = enemy.AddComponent<SimpleEnemy>();
-        se.patrolDistance = patrolDist;
-        se.moveSpeed = moveSpeed;
-        se.is2DSprite = true;
+        SimpleEnemy sEnemy = enemy.AddComponent<SimpleEnemy>();
+        sEnemy.patrolDistance = patrolDist;
+        sEnemy.moveSpeed = moveSpeed;
+        sEnemy.is2DSprite = true;
     }
 
     private static void CreateBatEnemy(Vector3 pos, float patrolDist, float moveSpeed = 3f)
     {
+        GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{GoldRushPrefabGenerator.ENEMY_DIR}/Enemy_Bat.prefab");
+        if (prefab != null)
+        {
+            GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            instance.transform.position = pos;
+            SimpleEnemy se = instance.GetComponent<SimpleEnemy>();
+            if (se != null)
+            {
+                se.patrolDistance = patrolDist;
+                se.moveSpeed = moveSpeed;
+            }
+            return;
+        }
+
         GameObject bat = new GameObject("Enemy_Bat");
         bat.transform.position = pos;
 
@@ -1179,10 +1244,10 @@ public static class GoldRushProjectMasterBuilder
         col.size = new Vector3(1.2f, 0.8f, 1.5f);
         col.center = new Vector3(0, 0, 0);
 
-        SimpleEnemy se = bat.AddComponent<SimpleEnemy>();
-        se.patrolDistance = patrolDist;
-        se.moveSpeed = moveSpeed;
-        se.is2DSprite = true;
+        SimpleEnemy sEnemy = bat.AddComponent<SimpleEnemy>();
+        sEnemy.patrolDistance = patrolDist;
+        sEnemy.moveSpeed = moveSpeed;
+        sEnemy.is2DSprite = true;
     }
 
     private static void CreateMainGround(Vector3 center, float totalWidth, float height, string spritePath)
@@ -1214,59 +1279,109 @@ public static class GoldRushProjectMasterBuilder
 
     private static void CreateGrassPlatform(Vector3 pos, Vector3 size)
     {
+        GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{GoldRushPrefabGenerator.ENV_DIR}/Platform_Grass.prefab");
+        if (prefab != null)
+        {
+            GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            instance.transform.position = pos;
+            BoxCollider col = instance.GetComponent<BoxCollider>();
+            if (col != null) col.size = new Vector3(size.x, size.y, 2.5f);
+            Transform visual = instance.transform.Find("Visual");
+            if (visual != null) visual.localScale = new Vector3(size.x / 5.12f, size.y / 1.6f, 1f);
+            return;
+        }
+
         GameObject p = new GameObject("GrassPlatform");
         p.transform.position = pos;
 
-        BoxCollider col = p.AddComponent<BoxCollider>();
-        col.size = new Vector3(size.x, size.y, 2.5f);
+        BoxCollider pCol = p.AddComponent<BoxCollider>();
+        pCol.size = new Vector3(size.x, size.y, 2.5f);
 
-        GameObject visual = new GameObject("Visual");
-        visual.transform.SetParent(p.transform, false);
-        visual.transform.localScale = new Vector3(size.x / 5.12f, size.y / 1.6f, 1f);
+        GameObject pVisual = new GameObject("Visual");
+        pVisual.transform.SetParent(p.transform, false);
+        pVisual.transform.localScale = new Vector3(size.x / 5.12f, size.y / 1.6f, 1f);
 
-        SpriteRenderer sr = visual.AddComponent<SpriteRenderer>();
+        SpriteRenderer sr = pVisual.AddComponent<SpriteRenderer>();
         sr.sprite = LoadSprite("Assets/Sprites/Environment/Platform_Grass.png");
         sr.sortingOrder = 2;
     }
 
     private static void CreateCavePlatform(Vector3 pos, Vector3 size)
     {
+        GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{GoldRushPrefabGenerator.ENV_DIR}/Platform_Crystal.prefab");
+        if (prefab != null)
+        {
+            GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            instance.transform.position = pos;
+            BoxCollider col = instance.GetComponent<BoxCollider>();
+            if (col != null) col.size = new Vector3(size.x, size.y, 2.5f);
+            Transform visual = instance.transform.Find("Visual");
+            if (visual != null) visual.localScale = new Vector3(size.x / 5.12f, size.y / 1.6f, 1f);
+            return;
+        }
+
         GameObject p = new GameObject("CavePlatform");
         p.transform.position = pos;
 
-        BoxCollider col = p.AddComponent<BoxCollider>();
-        col.size = new Vector3(size.x, size.y, 2.5f);
+        BoxCollider pCol = p.AddComponent<BoxCollider>();
+        pCol.size = new Vector3(size.x, size.y, 2.5f);
 
-        GameObject visual = new GameObject("Visual");
-        visual.transform.SetParent(p.transform, false);
-        visual.transform.localScale = new Vector3(size.x / 5.12f, size.y / 1.6f, 1f);
+        GameObject pVisual = new GameObject("Visual");
+        pVisual.transform.SetParent(p.transform, false);
+        pVisual.transform.localScale = new Vector3(size.x / 5.12f, size.y / 1.6f, 1f);
 
-        SpriteRenderer sr = visual.AddComponent<SpriteRenderer>();
+        SpriteRenderer sr = pVisual.AddComponent<SpriteRenderer>();
         sr.sprite = LoadSprite("Assets/Sprites/Environment/Platform_Crystal.png");
         sr.sortingOrder = 2;
     }
 
     private static void CreateSkyIsland(Vector3 pos, Vector3 size)
     {
+        GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{GoldRushPrefabGenerator.ENV_DIR}/Platform_Wood.prefab");
+        if (prefab != null)
+        {
+            GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            instance.name = "SkyIsland";
+            instance.transform.position = pos;
+            BoxCollider col = instance.GetComponent<BoxCollider>();
+            if (col != null) col.size = new Vector3(size.x, size.y, 2.5f);
+            Transform visual = instance.transform.Find("Visual");
+            if (visual != null)
+            {
+                float verticalScale = size.y / 1.2f;
+                visual.localPosition = new Vector3(0f, 0.12f * verticalScale, 0f);
+                visual.localScale = new Vector3(size.x / 5.12f, verticalScale, 1f);
+            }
+            return;
+        }
+
         GameObject p = new GameObject("SkyIsland");
         p.transform.position = pos;
 
-        BoxCollider col = p.AddComponent<BoxCollider>();
-        col.size = new Vector3(size.x, size.y, 2.5f);
+        BoxCollider pCol = p.AddComponent<BoxCollider>();
+        pCol.size = new Vector3(size.x, size.y, 2.5f);
 
-        GameObject visual = new GameObject("Visual");
-        visual.transform.SetParent(p.transform, false);
-        float verticalScale = size.y / 1.2f;
-        visual.transform.localPosition = new Vector3(0f, 0.12f * verticalScale, 0f);
-        visual.transform.localScale = new Vector3(size.x / 5.12f, verticalScale, 1f);
+        GameObject pVisual = new GameObject("Visual");
+        pVisual.transform.SetParent(p.transform, false);
+        float vScale = size.y / 1.2f;
+        pVisual.transform.localPosition = new Vector3(0f, 0.12f * vScale, 0f);
+        pVisual.transform.localScale = new Vector3(size.x / 5.12f, vScale, 1f);
 
-        SpriteRenderer sr = visual.AddComponent<SpriteRenderer>();
+        SpriteRenderer sr = pVisual.AddComponent<SpriteRenderer>();
         sr.sprite = LoadSprite("Assets/Sprites/Environment/Platform_Wood.png");
         sr.sortingOrder = 2;
     }
 
     private static void CreateSpikeTrap(Vector3 pos)
     {
+        GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{GoldRushPrefabGenerator.HAZARD_DIR}/SpikeTrap.prefab");
+        if (prefab != null)
+        {
+            GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            instance.transform.position = pos;
+            return;
+        }
+
         GameObject trap = new GameObject("SpikeTrap");
         trap.transform.position = pos;
 
@@ -1288,6 +1403,15 @@ public static class GoldRushProjectMasterBuilder
 
     private static void CreateCloud(Transform parent, Vector3 pos, float scale = 1f)
     {
+        GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{GoldRushPrefabGenerator.ENV_DIR}/Cloud_Decor.prefab");
+        if (prefab != null)
+        {
+            GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
+            instance.transform.position = pos;
+            instance.transform.localScale = new Vector3(scale * 0.45f, scale * 0.45f, 1f);
+            return;
+        }
+
         GameObject cloud = new GameObject("Cloud_Decor");
         cloud.transform.SetParent(parent);
         cloud.transform.position = pos;
@@ -1300,6 +1424,16 @@ public static class GoldRushProjectMasterBuilder
 
     private static GameObject CreateFlagExit(Vector3 pos, int minimumCoins)
     {
+        GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{GoldRushPrefabGenerator.EXIT_DIR}/Exit_Flag.prefab");
+        if (prefab != null)
+        {
+            GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            instance.transform.position = pos;
+            LevelExit le = instance.GetComponent<LevelExit>();
+            if (le != null) le.minimumCoinsToWin = minimumCoins;
+            return instance;
+        }
+
         GameObject exitObj = new GameObject("Exit_Flag");
         exitObj.transform.position = pos;
 
@@ -1322,6 +1456,16 @@ public static class GoldRushProjectMasterBuilder
 
     private static GameObject CreatePortalExit(Vector3 pos, int minimumCoins)
     {
+        GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{GoldRushPrefabGenerator.EXIT_DIR}/Exit_Portal.prefab");
+        if (prefab != null)
+        {
+            GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            instance.transform.position = pos;
+            LevelExit le = instance.GetComponent<LevelExit>();
+            if (le != null) le.minimumCoinsToWin = minimumCoins;
+            return instance;
+        }
+
         GameObject exitObj = new GameObject("Exit_Portal");
         exitObj.transform.position = pos;
 
@@ -1343,6 +1487,16 @@ public static class GoldRushProjectMasterBuilder
 
     private static GameObject CreateGoldenGateExit(Vector3 pos, int minimumCoins)
     {
+        GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{GoldRushPrefabGenerator.EXIT_DIR}/Exit_GoldenGate.prefab");
+        if (prefab != null)
+        {
+            GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            instance.transform.position = pos;
+            LevelExit le = instance.GetComponent<LevelExit>();
+            if (le != null) le.minimumCoinsToWin = minimumCoins;
+            return instance;
+        }
+
         GameObject exitObj = new GameObject("Exit_GoldenGate");
         exitObj.transform.position = pos;
 
@@ -1374,6 +1528,15 @@ public static class GoldRushProjectMasterBuilder
 
     private static void CreateManagersInScene()
     {
+        if (Object.FindFirstObjectByType<GameManager>() == null && Object.FindFirstObjectByType<SoundManager>() == null)
+        {
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{GoldRushPrefabGenerator.MGR_DIR}/Managers_Master.prefab");
+            if (prefab != null)
+            {
+                PrefabUtility.InstantiatePrefab(prefab);
+                return;
+            }
+        }
         if (Object.FindFirstObjectByType<GameManager>() == null)
         {
             GameObject gm = new GameObject("GameManager");
