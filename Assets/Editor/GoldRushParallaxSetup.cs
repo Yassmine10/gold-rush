@@ -49,6 +49,14 @@ public class GoldRushParallaxSetup : EditorWindow
             "✅ Sky Temple background setup complete!\n\nScene saved automatically.\nPress Play ▶️ to test.", "OK");
     }
 
+    [MenuItem("Gold Rush/Create Game Prefabs (Coins, Enemies, Hazards)")]
+    public static void CreateGamePrefabs()
+    {
+        CreateStandardPrefabs();
+        EditorUtility.DisplayDialog("Gold Rush – Prefabs",
+            "✅ Prefabs successfully created in Assets/Prefabs/ !\n\n- GoldCoin.prefab\n- Enemy_Slime.prefab\n- SpikeTrap.prefab\n\nYou can now drag and drop them anywhere in your scenes.", "OK");
+    }
+
     [MenuItem("Gold Rush/Fix Player Collider Alignment")]
     public static void FixPlayerColliderAlignment()
     {
@@ -160,6 +168,14 @@ public class GoldRushParallaxSetup : EditorWindow
             FixPlayerColliderAlignment();
             FixExistingObjectSortingLayersLevel3();
             SaveAndNotify("Level 3 – Sky Temple");
+        }
+
+        EditorGUILayout.Space(6);
+        GUILayout.Label("── Prefabs ──", EditorStyles.miniLabel);
+
+        if (GUILayout.Button("📦 Create Game Prefabs (Coins, Slime, Spikes)", GUILayout.Height(36)))
+        {
+            CreateGamePrefabs();
         }
     }
 
@@ -500,5 +516,132 @@ public class GoldRushParallaxSetup : EditorWindow
             UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
                 UnityEngine.SceneManagement.SceneManager.GetActiveScene());
         }
+    }
+
+    // =========================================================================
+    //  PREFAB GENERATOR
+    // =========================================================================
+
+    private static void CreateStandardPrefabs()
+    {
+        if (!AssetDatabase.IsValidFolder("Assets/Prefabs"))
+        {
+            AssetDatabase.CreateFolder("Assets", "Prefabs");
+        }
+
+        // 1. GoldCoin Prefab
+        CreateGoldCoinPrefab();
+
+        // 2. Enemy_Slime Prefab
+        CreateSlimeEnemyPrefab();
+
+        // 3. SpikeTrap Prefab
+        CreateSpikeTrapPrefab();
+
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+        Debug.Log("[GoldRush] All standard prefabs created in Assets/Prefabs/");
+    }
+
+    private static void CreateGoldCoinPrefab()
+    {
+        string path = "Assets/Prefabs/GoldCoin.prefab";
+
+        GameObject coinRoot = new GameObject("GoldCoin");
+        SphereCollider sc = coinRoot.AddComponent<SphereCollider>();
+        sc.isTrigger = true;
+        sc.radius = 0.45f;
+
+        Coin coin = coinRoot.AddComponent<Coin>();
+        coin.coinValue = 10;
+        coin.scorePoints = 100;
+
+        GameObject visual = new GameObject("Visual");
+        visual.transform.SetParent(coinRoot.transform, false);
+        visual.transform.localScale = new Vector3(0.18f, 0.18f, 1f);
+
+        SpriteRenderer sr = visual.AddComponent<SpriteRenderer>();
+        sr.sortingLayerName = "Foreground";
+        sr.sortingOrder = 2;
+
+        Sprite coinSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Collectibles/Coin_Idle.png");
+        if (coinSprite != null) sr.sprite = coinSprite;
+
+        CoinSpriteAnimator anim = visual.AddComponent<CoinSpriteAnimator>();
+        anim.spinFrames = new Sprite[]
+        {
+            AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Collectibles/Coin_Spin_0.png") ?? coinSprite,
+            AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Collectibles/Coin_Spin_1.png") ?? coinSprite,
+            AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Collectibles/Coin_Spin_2.png") ?? coinSprite,
+            AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Collectibles/Coin_Spin_3.png") ?? coinSprite
+        };
+        anim.frameRate = 9f;
+        anim.bobAmplitude = 0.08f;
+        anim.bobSpeed = 2.5f;
+
+        PrefabUtility.SaveAsPrefabAsset(coinRoot, path);
+        DestroyImmediate(coinRoot);
+        Debug.Log($"[GoldRush] Created prefab: {path}");
+    }
+
+    private static void CreateSlimeEnemyPrefab()
+    {
+        string path = "Assets/Prefabs/Enemy_Slime.prefab";
+
+        GameObject enemyRoot = new GameObject("Enemy_Slime");
+        BoxCollider bc = enemyRoot.AddComponent<BoxCollider>();
+        bc.isTrigger = true;
+        bc.size = new Vector3(1.2f, 0.85f, 1.5f);
+
+        SimpleEnemy enemy = enemyRoot.AddComponent<SimpleEnemy>();
+        enemy.moveSpeed = 2.4f;
+        enemy.patrolDistance = 3.5f;
+        enemy.stompScorePoints = 200;
+        enemy.is2DSprite = true;
+        enemy.direction = 1;
+
+        GameObject visual = new GameObject("Visual");
+        visual.transform.SetParent(enemyRoot.transform, false);
+        visual.transform.localScale = new Vector3(0.24f, 0.24f, 1f);
+
+        SpriteRenderer sr = visual.AddComponent<SpriteRenderer>();
+        sr.sortingLayerName = "Foreground";
+        sr.sortingOrder = 1;
+
+        Sprite slimeSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Characters/Enemy_Slime_Walk1.png")
+                          ?? AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Characters/Enemy_Classic_Run1.png");
+        if (slimeSprite != null) sr.sprite = slimeSprite;
+
+        PrefabUtility.SaveAsPrefabAsset(enemyRoot, path);
+        DestroyImmediate(enemyRoot);
+        Debug.Log($"[GoldRush] Created prefab: {path}");
+    }
+
+    private static void CreateSpikeTrapPrefab()
+    {
+        string path = "Assets/Prefabs/SpikeTrap.prefab";
+
+        GameObject spikeRoot = new GameObject("SpikeTrap");
+        BoxCollider bc = spikeRoot.AddComponent<BoxCollider>();
+        bc.isTrigger = true;
+        bc.size = new Vector3(1.5f, 0.6f, 1f);
+
+        spikeRoot.AddComponent<SpikeHazard>();
+
+        GameObject visual = new GameObject("Visual");
+        visual.transform.SetParent(spikeRoot.transform, false);
+        visual.transform.localScale = new Vector3(0.35f, 0.35f, 1f);
+
+        SpriteRenderer sr = visual.AddComponent<SpriteRenderer>();
+        sr.sortingLayerName = "Foreground";
+        sr.sortingOrder = 0;
+
+        Sprite spikeSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Environment/Spikes.png")
+                          ?? AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Environment/Platform_Spikes.png");
+        if (spikeSprite != null) sr.sprite = spikeSprite;
+
+        PrefabUtility.SaveAsPrefabAsset(spikeRoot, path);
+        DestroyImmediate(spikeRoot);
+        Debug.Log($"[GoldRush] Created prefab: {path}");
     }
 }
